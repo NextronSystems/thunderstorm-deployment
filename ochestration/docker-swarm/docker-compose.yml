@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  thunderstorm_service:
+    image: thunderstorm:latest
+    networks:
+      - traefik-public
+    deploy:
+      endpoint_mode: vip
+      replicas: 5
+      labels:
+        - traefik.enable=true
+        - traefik.swarm.network=traefik-public
+        - traefik.http.routers.thunderstorm-http.rule=Host(`thunderstorm.intern`)
+        - traefik.http.routers.thunderstorm-http.entrypoints=web
+        - traefik.http.services.thunderstorm-service.loadbalancer.server.port=8000
