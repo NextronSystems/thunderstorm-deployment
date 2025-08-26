@@ -32,4 +32,7 @@ RUN unzip -o -q "$TEMP_DIR/thor.zip" -d "$TARGET_DIR"
 # cleanup
 RUN rm "$TEMP_DIR/thor.zip"
 
+# copy custom THOR config
+COPY custom-thor.yml "$TARGET_DIR/config/custom-thor.yml"
+
 ENTRYPOINT ["/entrypoint.sh"]

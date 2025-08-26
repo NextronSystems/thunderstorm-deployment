@@ -15,4 +15,7 @@ exec "$TARGET_DIR/tools/thunderstorm" \
     "--store-samples-score" "${STORE_SAMPLES_SCORE:-200}" \
     "--thor-binary" "${THOR_BINARY:-$TARGET_DIR/thor-linux-64}" \
     "--upload-dir" "$UPLOAD_DIR" \
-    "--vfs-dir" "$VFS_DIR"
+    "--vfs-dir" "$VFS_DIR" \
+    "--" \
+    "--no-json" \
+    "--template" "$TARGET_DIR/config/custom-thor.yml"

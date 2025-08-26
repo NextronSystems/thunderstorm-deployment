@@ -53,6 +53,17 @@ If you want to deploy multiple Thunderstorm instances, we recommend to distribut
 
 We created a docker-compose template for a Docker Swarm setup with Traefik under `ochestration/docker-swarm/docker-compose.yml`.
 
+## Remote Logging
+
+Thunderstorm is able to pass custom parameters to the THOR executable. By default, the respective Container Image disables the generation of JSON reports with `--no-json` because the reports will be deleted after the container stops (unless a persistence volume is used). However, you usually want to log the scan results to a remote SIEM system such as [Splunk](https://www.splunk.com) or [Elastic](https://www.elastic.co). Therefore, you may want to specify your remote logging systems inside the `custom-thor.yml` template file.
+
+```yaml
+# Send scan output to a remote server
+remote-log:
+  - splunk.intern:514:DEFAULT:TCP
+  - elastic.intern:1514:JSON:TCP
+```
+
 ## Security
 
 The communication between a client and the Thunderstorm service could involve sensitive files. Therefore, we highly recommend to encrypt the traffic using TLS by mounting the certificate and private key via the built-in secrets functionality of Docker or Kubernetes into the container. In addition, you need to specify the file path to the TLS certificate and private key in the environment variables `TLS_CERT` and `TLS_KEY`.
