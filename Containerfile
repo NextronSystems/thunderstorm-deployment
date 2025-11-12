@@ -12,6 +12,7 @@ RUN test -n "$CONTRACT_TOKEN" || (echo "CONTRACT_TOKEN is required!" && false)
 ENV TEMP_DIR="/tmp/thunderstorm"
 ENV TARGET_DIR="/opt/nextron/thunderstorm"
 ENV UPLOAD_DIR="$TEMP_DIR/uploads"
+ENV SIGNATURE_UPDATE_INTERVAL=24
 
 # create directories
 RUN mkdir -p "$TEMP_DIR" "$TARGET_DIR" "$UPLOAD_DIR"

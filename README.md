@@ -39,7 +39,7 @@ docker push registry.internal/thunderstorm/thunderstorm:<TAG>
 
 ## Signature Updates
 
-Thunderstorm is not yet able to update signatures during runtime. Even though the feature is already planned for the next THOR release, the container currently needs to be restarted to download and apply the latest detection rules. Nevertheless, customers with high availability requirements can circumvent this limitation by using a rolling deployment and / or multiple replicas.
+By default, Thunderstorm tries to download new THOR signatures every 24 hours while running. You should keep in mind that the THOR signature release cycle may differ, so there is not always a new package available. The signature update interval can be modified on an hourly basis by specifying the environment variable `SIGNATURE_UPDATE_INTERVAL` in the `Containerfile` or `docker-compose.yml`.
 
 ### Rolling Deployment
 

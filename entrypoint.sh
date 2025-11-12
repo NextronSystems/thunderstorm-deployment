@@ -16,6 +16,7 @@ exec "$TARGET_DIR/tools/thunderstorm" \
     "--thor-location" "${THOR_LOCATION:-$TARGET_DIR}" \
     "--upload-dir" "$UPLOAD_DIR" \
     "--vfs-dir" "$VFS_DIR" \
+    "--signature-update-interval" "$SIGNATURE_UPDATE_INTERVAL" \
     "--" \
     "--no-json" \
     "--template" "$TARGET_DIR/config/custom-thor.yml"
