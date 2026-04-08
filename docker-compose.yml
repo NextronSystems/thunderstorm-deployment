@@ -1,6 +1,9 @@
 services:
   thunderstorm:
     image: ghcr.io/nextronsystems/thunderstorm-deployment:latest
+    build:
+      context: .
+      dockerfile: Containerfile
     ports:
       - "${PORT:-8000}:${PORT:-8000}"
     environment:
