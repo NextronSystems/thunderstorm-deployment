@@ -9,10 +9,8 @@ if [ ! -f "$TARGET_DIR/thor-util" ]; then
     wget -O "$TEMP_DIR/thor.zip" "https://portal.nextron-systems.com/api/voucher/download/$CONTRACT_TOKEN/thor/linux" && \
         unzip -o -q "$TEMP_DIR/thor.zip" -d "$TARGET_DIR" && \
         rm "$TEMP_DIR/thor.zip"
+    "$TARGET_DIR/thor-util" upgrade --techpreview --dev  #TODO: remove once THOR11 is published
 fi
-
-# update THOR signatures
-"$TARGET_DIR/thor-util" update
 
 # append optional TLS and VFS arguments to THUNDERSTORM_ARGS
 [ -n "$TLS_CERT" ] && THUNDERSTORM_ARGS="$THUNDERSTORM_ARGS --cert $TLS_CERT"
@@ -30,7 +28,7 @@ exec "$TARGET_DIR/tools/thunderstorm" \
     "--store-samples-score" "${STORE_SAMPLES_SCORE:-200}" \
     "--thor-location" "${THOR_LOCATION:-$TARGET_DIR}" \
     "--upload-dir" "$UPLOAD_DIR" \
-    "--signature-update-interval" "${SIGNATURE_UPDATE_INTERVAL:24}" \
+    "--signature-update-interval" "${SIGNATURE_UPDATE_INTERVAL:-24}" \
     $THUNDERSTORM_ARGS \
     "--" \
     "--no-json" \
