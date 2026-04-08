@@ -27,7 +27,7 @@ cd thunderstorm-deployment/
 3. Build image where `<TAG>` could be the Thunderstorm version and `<CONTRACT_TOKEN>` is the contract token of your non-host-based Thunderstorm license.
 
 ```
-docker build -f Containerfile -t thunderstorm:<TAG> --build-args CONTRACT_TOKEN=<CONTRACT_TOKEN> .
+docker build -f Containerfile -t thunderstorm:<TAG> --build-arg CONTRACT_TOKEN=<CONTRACT_TOKEN> .
 ```
 
 4. Push image to your container registry
