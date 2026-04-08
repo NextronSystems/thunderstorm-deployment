@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  thunderstorm:
+    image: ghcr.io/nextronsystems/thunderstorm-deployment:latest
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
+    environment:
+      # Required: your non-host-based Thunderstorm contract token
+      CONTRACT_TOKEN: "${CONTRACT_TOKEN}"
+      # Optional: bind address (default: 0.0.0.0)
+      # HOST: "0.0.0.0"
+      # Optional: service port (default: 8000)
+      # PORT: "8000"
+      # Optional: hours between signature updates (default: 24)
+      # SIGNATURE_UPDATE_INTERVAL: "24"
+      # Optional: TLS certificate and private key paths (mounted via secrets)
+      # TLS_CERT: "/run/secrets/tls_cert"
+      # TLS_KEY: "/run/secrets/tls_key"
+      # Optional: persistent upload queue location
+      # QUEUE_STORAGE: "/data/persisted-uploads"
+      # Optional: upload queue size warning threshold (default: 50000)
+      # QUEUE_WARN_SIZE: "50000"
+      # Optional: result cache size (default: 250000)
+      # RESULT_CACHE_SIZE: "250000"
+      # Optional: minimum score for storing samples (default: 200)
+      # STORE_SAMPLES_SCORE: "200"
+      # Optional: additional Thunderstorm arguments (e.g. "--new-param value")
+      # THUNDERSTORM_ARGS: ""
+      # Optional: additional THOR arguments (e.g. "--remote-log splunk.intern:514:DEFAULT:TCP")
+      # THOR_ARGS: ""
+    volumes:
+      # Persist Thor binaries and signatures across restarts
+      - thor-data:/opt/nextron/thunderstorm
+    deploy:
+      replicas: 1
+      update_config:
+        order: start-first
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  thor-data:
