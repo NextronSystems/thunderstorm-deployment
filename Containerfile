@@ -14,16 +14,18 @@ ENV TARGET_DIR="/opt/nextron/thunderstorm"
 ENV UPLOAD_DIR="$TEMP_DIR/uploads"
 ENV SIGNATURE_UPDATE_INTERVAL=24
 
-# create directories
-RUN mkdir -p "$TEMP_DIR" "$TARGET_DIR" "$UPLOAD_DIR"
+# create directories and user
+RUN mkdir -p "$TEMP_DIR" "$TARGET_DIR" "$UPLOAD_DIR" && \
+    adduser -S -H -D -g "Thunderstorm User" thunderstorm && \
+    chown -R thunderstorm "$TEMP_DIR" "$TARGET_DIR"
 
 # copy entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# create Thunderstorm user
-RUN adduser -S -H -D -g "Thunderstorm User" thunderstorm
-RUN chown -R thunderstorm "$TEMP_DIR" "$TARGET_DIR"
+# copy custom THOR config
+COPY custom-thor.yml /opt/nextron/thunderstorm/config/custom-thor.yml
+
 USER thunderstorm
 
 # download and extract Thor
