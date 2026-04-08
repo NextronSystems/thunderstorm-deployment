@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   thunderstorm:
     image: ghcr.io/nextronsystems/thunderstorm-deployment:latest
