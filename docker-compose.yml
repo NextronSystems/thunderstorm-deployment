@@ -31,8 +31,12 @@ services:
       # Optional: additional THOR arguments (e.g. "--remote-log splunk.intern:514:DEFAULT:TCP")
       # THOR_ARGS: ""
     volumes:
-      # Persist Thor binaries and signatures across restarts
+      # Persist Thor binaries and other artifacts across restarts
       - thor-data:/opt/nextron/thunderstorm
+      - thor-config:/opt/nextron/thunderstorm/config
+      - thor-plugins:/opt/nextron/thunderstorm/plugins
+      - thor-signatures:/opt/nextron/thunderstorm/signatures
+      - custom-signatures:/opt/nextron/thunderstorm/custom-signatures
     deploy:
       replicas: 1
       update_config:
@@ -42,3 +46,7 @@ services:
 
 volumes:
   thor-data:
+  thor-config:
+  thor-plugins:
+  thor-signatures:
+  custom-signatures:
