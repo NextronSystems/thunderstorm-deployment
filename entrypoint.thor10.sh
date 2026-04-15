@@ -18,6 +18,13 @@ fi
 [ -n "$TLS_CERT" ] && THUNDERSTORM_ARGS="$THUNDERSTORM_ARGS --server-cert $TLS_CERT"
 [ -n "$TLS_KEY" ]  && THUNDERSTORM_ARGS="$THUNDERSTORM_ARGS --server-key $TLS_KEY"
 
+# optionally write text log to volume; HTML and CSV are always disabled
+if [ -n "$LOG_ENABLED" ]; then
+    THOR_ARGS="-e $TEMP_DIR/logs --nohtml --nocsv $THOR_ARGS"
+else
+    THOR_ARGS="--nolog --nocsv $THOR_ARGS"
+fi
+
 # run Thunderstorm service
 # use THUNDERSTORM_ARGS and THOR_ARGS to pass any additional arguments to either binary
 exec "$TARGET_DIR/thor-linux-64" \

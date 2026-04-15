@@ -24,6 +24,8 @@ services:
       # PURE_YARA: "true"
       # Optional: enforce maximum file size for all file types including registry hives and log files
       # FORCE_MAX_FILE_SIZE: "true"
+      # Optional: write text log to the logs volume (uncomment volume below)
+      # LOG_ENABLED: "true"
       # Optional: additional Thunderstorm arguments (e.g. "--server-new-param value")
       # THUNDERSTORM_ARGS: ""
       # Optional: additional THOR arguments
@@ -39,6 +41,8 @@ services:
       - thor10-plugins:/opt/nextron/thunderstorm/plugins
       - thor10-signatures:/opt/nextron/thunderstorm/signatures
       - thor10-custom-signatures:/opt/nextron/thunderstorm/custom-signatures
+      # Optional: write text log to volume (uncomment LOG_ENABLED above as well)
+      # - thor10-logs:/tmp/thunderstorm/logs
     deploy:
       replicas: 1
       update_config:
@@ -53,3 +57,5 @@ volumes:
   thor10-plugins:
   thor10-signatures:
   thor10-custom-signatures:
+  # Optional: write text log to volume
+  # thor10-logs:

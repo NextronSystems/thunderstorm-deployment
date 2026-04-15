@@ -16,6 +16,13 @@ fi
 [ -n "$TLS_CERT" ] && THUNDERSTORM_ARGS="$THUNDERSTORM_ARGS --cert $TLS_CERT"
 [ -n "$TLS_KEY" ]  && THUNDERSTORM_ARGS="$THUNDERSTORM_ARGS --key $TLS_KEY"
 
+# optionally write JSON log to volume; HTML and CSV are always disabled
+if [ -n "$LOG_ENABLED" ]; then
+    THOR_ARGS="--no-html --no-csv -e $TEMP_DIR/logs $THOR_ARGS"
+else
+    THOR_ARGS="--no-json --no-csv $THOR_ARGS"
+fi
+
 # run Thunderstorm service
 # use THUNDERSTORM_ARGS and THOR_ARGS to pass any additional arguments to either binary
 exec "$TARGET_DIR/tools/thunderstorm" \
@@ -31,5 +38,4 @@ exec "$TARGET_DIR/tools/thunderstorm" \
     "--signature-update-interval" "${SIGNATURE_UPDATE_INTERVAL:-24}" \
     $THUNDERSTORM_ARGS \
     "--" \
-    "--no-json" \
     $THOR_ARGS

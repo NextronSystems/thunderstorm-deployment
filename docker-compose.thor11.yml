@@ -24,6 +24,8 @@ services:
       # STORE_SAMPLES_SCORE: "200"
       # Optional: enable VFS directory mirroring uploaded files per host (also uncomment volume below)
       # VFS_ENABLED: "true"
+      # Optional: write JSON log to the logs volume (uncomment volume below)
+      # LOG_ENABLED: "true"
       # Optional: additional Thunderstorm arguments (e.g. "--new-param value")
       # THUNDERSTORM_ARGS: ""
       # Optional: additional THOR arguments (e.g. "--remote-log splunk.intern:514:DEFAULT:TCP")
@@ -40,8 +42,10 @@ services:
       - thor11-plugins:/opt/nextron/thunderstorm/plugins
       - thor11-signatures:/opt/nextron/thunderstorm/signatures
       - thor11-custom-signatures:/opt/nextron/thunderstorm/custom-signatures
-      # Optional: enable VFS directory
+      # Optional: enable VFS directory (uncomment VFS_ENABLED above as well)
       # - thor11-vfs:/tmp/thunderstorm/vfs
+      # Optional: write JSON log to volume (uncomment LOG_ENABLED above as well)
+      # - thor11-logs:/tmp/thunderstorm/logs
     deploy:
       replicas: 1
       update_config:
@@ -59,3 +63,5 @@ volumes:
   thor11-custom-signatures:
   # Optional: enable VFS directory
   # thor11-vfs:
+  # Optional: write JSON log to volume
+  # thor11-logs:
