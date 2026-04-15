@@ -6,7 +6,8 @@ if [ ! -f "$TARGET_DIR/thor-util" ]; then
         echo "CONTRACT_TOKEN is required to download Thor!" >&2
         exit 1
     fi
-    wget -O "$TEMP_DIR/thor.zip" "https://portal.nextron-systems.com/api/voucher/download/$CONTRACT_TOKEN/thor/linux" && \
+    echo "Downloading Thor..." && \
+    wget -q -O "$TEMP_DIR/thor.zip" "https://portal.nextron-systems.com/api/voucher/download/$CONTRACT_TOKEN/thor/linux" && \
         unzip -o -q "$TEMP_DIR/thor.zip" -d "$TARGET_DIR" && \
         rm "$TEMP_DIR/thor.zip"
     "$TARGET_DIR/thor-util" upgrade --techpreview --dev  #TODO: remove once THOR11 is published
