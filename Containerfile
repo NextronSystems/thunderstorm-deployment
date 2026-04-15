@@ -10,7 +10,17 @@ ENV TARGET_DIR="/opt/nextron/thunderstorm"
 ENV UPLOAD_DIR="$TEMP_DIR/uploads"
 
 # create directories and user
-RUN mkdir -p "$TEMP_DIR" "$TARGET_DIR" "$UPLOAD_DIR" && \
+RUN mkdir -p \
+        "$TEMP_DIR" \
+        "$TEMP_DIR/.persisted-uploads" \
+        "$TEMP_DIR/logs" \
+        "$TEMP_DIR/vfs" \
+        "$TARGET_DIR" \
+        "$TARGET_DIR/config" \
+        "$TARGET_DIR/plugins" \
+        "$TARGET_DIR/signatures" \
+        "$TARGET_DIR/custom-signatures" \
+        "$UPLOAD_DIR" && \
     adduser -S -H -D -g "Thunderstorm User" thunderstorm && \
     chown -R thunderstorm "$TEMP_DIR" "$TARGET_DIR"
 
