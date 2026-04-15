@@ -4,33 +4,56 @@ Many companies rely on the containerization of services to increase economic and
 
 ## Quick Start
 
-Thunderstorm is a web service which allows you to scan files with our compromise assessment tool THOR through a Web-API. A ready-to-use base image is published to the GitHub Container Registry and only requires your contract token to run.
+Thunderstorm is a web service which allows you to scan files with our compromise assessment tool THOR through a Web-API. Ready-to-use base images are published to the GitHub Container Registry and only require your contract token to run.
 
-1. Download the `docker-compose.yml` from this repository
+Two versions are available:
+
+| Version | Image tag | Compose file | Default port |
+|---|---|---|---|
+| THOR 10.7 (stable) | `:thor10` | `docker-compose.thor10.yml` | 8080 |
+| THOR 11 (techpreview) | `:thor11` | `docker-compose.thor11.yml` | 8000 |
+
+### THOR 10.7
+
+1. Download the compose file
 
 ```
-curl -O https://raw.githubusercontent.com/NextronSystems/thunderstorm-deployment/master/docker-compose.yml
+curl -O https://raw.githubusercontent.com/NextronSystems/thunderstorm-deployment/master/docker-compose.thor10.yml
 ```
 
 2. Start the service with your contract token
 
 ```
-CONTRACT_TOKEN=<CONTRACT_TOKEN> docker compose up -d
+CONTRACT_TOKEN=<CONTRACT_TOKEN> docker compose -f docker-compose.thor10.yml up -d
 ```
 
-On first start, Thunderstorm downloads the THOR binaries using your `CONTRACT_TOKEN` (your non-host-based Thunderstorm license) and persists them in a Docker volume so subsequent restarts are instant. THOR signatures are updated automatically on every start and periodically while running.
+### THOR 11
 
-The `docker-compose.yml` contains commented environment variables for all available configuration options such as TLS, port, queue size, and signature update interval.
+1. Download the compose file
+
+```
+curl -O https://raw.githubusercontent.com/NextronSystems/thunderstorm-deployment/master/docker-compose.thor11.yml
+```
+
+2. Start the service with your contract token
+
+```
+CONTRACT_TOKEN=<CONTRACT_TOKEN> docker compose -f docker-compose.thor11.yml up -d
+```
+
+On first start, Thunderstorm downloads the THOR binaries using your `CONTRACT_TOKEN` (your non-host-based Thunderstorm license) and persists them in a Docker volume so subsequent restarts are instant. THOR signatures are updated automatically on every start.
+
+Each compose file contains commented environment variables for all available configuration options.
 
 ## Signature Updates
 
-By default, Thunderstorm tries to download new THOR signatures every 24 hours while running. You should keep in mind that the THOR signature release cycle may differ, so there is not always a new package available. The signature update interval can be modified on an hourly basis by specifying the environment variable `SIGNATURE_UPDATE_INTERVAL` in the `docker-compose.yml`.
+On every container start, THOR signatures are updated automatically. For THOR 11, signatures are additionally refreshed periodically while running (every 24 hours by default, configurable via `SIGNATURE_UPDATE_INTERVAL`).
 
 ### Rolling Deployment
 
 If you are running a single Thunderstorm instance, you may want to use a Rolling Deployment to prevent a downtime of your Thunderstorm service. A Rolling Deployment spawns a new container and stops the old one after ensuring that the new one is healthy and ready to accept requests. The configuration differs between container management systems such as Kubernetes, Docker or Docker Swarm.
 
-For Docker we recommend `start-first` as value for `deploy.update_config.order`, as configured in the `docker-compose.yml` at the repository root.
+For Docker we recommend `start-first` as value for `deploy.update_config.order`, as configured in both compose files.
 
 ### Multiple Replicas
 
@@ -38,9 +61,9 @@ If you want to deploy multiple Thunderstorm instances, we recommend to distribut
 
 ## Passing Additional Arguments
 
-Any argument supported by Thunderstorm or THOR can be passed via the `THUNDERSTORM_ARGS` and `THOR_ARGS` environment variables in `docker-compose.yml`. This means new parameters released in future versions are available immediately without any changes to the image or entrypoint.
+Any argument supported by Thunderstorm or THOR can be passed via the `THUNDERSTORM_ARGS` and `THOR_ARGS` environment variables in the compose file. This means new parameters released in future versions are available immediately without any changes to the image or entrypoint.
 
-For example, to forward scan results to a remote SIEM:
+For example, to forward scan results to a remote SIEM (THOR 11):
 
 ```yaml
 environment:

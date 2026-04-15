@@ -14,8 +14,10 @@ RUN mkdir -p "$TEMP_DIR" "$TARGET_DIR" "$UPLOAD_DIR" && \
     adduser -S -H -D -g "Thunderstorm User" thunderstorm && \
     chown -R thunderstorm "$TEMP_DIR" "$TARGET_DIR"
 
-# copy entrypoint script
-COPY entrypoint.sh /entrypoint.sh
+# copy version-specific entrypoint script
+ARG THOR_VERSION
+RUN test -n "$THOR_VERSION" || (echo "THOR_VERSION is required!" && false)
+COPY entrypoint.thor${THOR_VERSION}.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 USER thunderstorm
