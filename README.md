@@ -6,6 +6,15 @@ Many companies rely on the containerization of services to increase economic and
 
 Thunderstorm is a web service which allows you to scan files with our compromise assessment tool THOR through a Web-API. Ready-to-use base images are published to the GitHub Container Registry and only require your contract token to run.
 
+### Contract Token
+
+The contract token is used to download the THOR binaries on first container start. You can find it in the [Nextron Portal](https://portal.nextron-systems.com/ui/contracts/contracts) under *Contracts & Licenses → Contracts → Actions → cloud icon → THOR Download Token*.
+
+<img src="images/contract_token.png" alt="Contract Token location in Nextron Portal" width="500">
+
+---
+
+
 Two versions are available:
 
 | Version | Image tag | Compose file | Default port |
