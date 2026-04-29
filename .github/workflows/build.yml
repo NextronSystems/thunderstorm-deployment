@@ -18,15 +18,6 @@ jobs:
       contents: read
       packages: write
 
-    strategy:
-      matrix:
-        include:
-          - thor_version: "10"
-            tag: thor10
-            extra_tags: latest
-          - thor_version: "11"
-            tag: thor11
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -44,16 +35,14 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ matrix.tag }},enable={{is_default_branch}}
-            type=raw,value=${{ matrix.extra_tags }},enable=${{ matrix.extra_tags != '' && github.ref_name == github.event.repository.default_branch }}
-            type=sha,prefix=sha-${{ matrix.tag }}-
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-
 
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: Containerfile
-          build-args: THOR_VERSION=${{ matrix.thor_version }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
