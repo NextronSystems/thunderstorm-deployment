@@ -35,16 +35,13 @@ A contract token can be retrieved from the [Nextron Portal](https://portal.nextr
 
 If you want to use the techpreview channel (currently THOR 11) you need to set `TECHPREVIEW=1`. If it is omitted it will downgrade to the stable channel again.
 
-The compose file contains commented environment variables for all available configuration options. Some options only apply to specific THOR major versions, for example, `SIGNATURE_UPDATE_INTERVAL` is only available for THOR 11.
+The compose file contains commented environment variables for all available configuration options. Some options only apply to specific THOR major versions, for example, `QUEUE_WARN_SIZE` is only available for THOR 11.
 
 ## Signature Updates
 
-On every container start, THOR signatures are updated automatically. You can enforce a signature update by restarting the service with a brief downtime:
-```
-docker compose up -d --force-recreate
-```
+THOR signatures are updated automatically on every container start. To keep them fresh without manually restart, set `SIGNATURE_UPDATE_INTERVAL` (in hours) to schedule recurring updates.
 
-If a brief downtime is not acceptable, you may want to consider a Docker Swarm setup with start-first update config or use the [techpreview channel](#tech-preview) (currently THOR 11) which allows you to update signatures periodically while running. By default, THOR 11 updates signatures every 24 hours but it can be customized via `SIGNATURE_UPDATE_INTERVAL` environment variable.
+The update mechanism depends on the THOR major version. On THOR 10, new signatures only take effect after a restart. Docker's health check therefore marks the container as unhealthy once `SIGNATURE_UPDATE_INTERVAL` has elapsed, prompting Docker to restart it. The new signatures are then fetched as part of the regular container start, at the cost of a brief API downtime. THOR 11 uses Thunderstorm's built-in signature-update feature to download and apply signatures in-place, leaving the API available throughout.
 
 ## Additional Arguments
 

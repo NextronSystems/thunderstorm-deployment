@@ -8,6 +8,8 @@ services:
       CONTRACT_TOKEN: "${CONTRACT_TOKEN}"
       # Optional: upgrade to THOR techpreview channel
       # TECHPREVIEW: "true"
+      # Optional: hours between signature updates (default: 0)
+      # SIGNATURE_UPDATE_INTERVAL: "0"
       # Optional: result cache size (default: 250000)
       # RESULT_CACHE_SIZE: "250000"
       # Optional: enforce maximum file size for all file types including registry hives and log files
@@ -35,8 +37,6 @@ services:
       # --- THOR 11 only ---
       # Optional: minimum score for storing samples (default: 200)
       # STORE_SAMPLES_SCORE: "200"
-      # Optional: hours between signature updates (default: 24)
-      # SIGNATURE_UPDATE_INTERVAL: "24"
       # Optional: upload queue size warning threshold (default: 50000)
       # QUEUE_WARN_SIZE: "50000"
       # Optional: enable VFS directory mirroring uploaded files per host (also uncomment volume below)
@@ -47,6 +47,16 @@ services:
       # Optional: mount TLS certificate and private key (uncomment TLS_CERT/TLS_KEY above as well)
       # - ./tls_cert:/run/secrets/tls_cert:ro
       # - ./tls_key:/run/secrets/tls_key:ro#
+    restart: unless-stopped
+    # THOR 10: periodically restart the container by signaling PID 1 once uptime exceeds
+    # SIGNATURE_UPDATE_INTERVAL hours; restart policy brings it back up. Skipped when
+    # SIGNATURE_UPDATE_INTERVAL is 0 (disabled, default) or TECHPREVIEW is set (THOR 11
+    # updates signatures in-process).
+    healthcheck:
+      test: ["CMD-SHELL", "[ -n \"$$TECHPREVIEW\" ] || [ \"$${SIGNATURE_UPDATE_INTERVAL:-0}\" = \"0\" ] || [ $$(($$(date +%s) - $$(stat -c %Y /proc/1))) -lt $$(( $${SIGNATURE_UPDATE_INTERVAL} * 3600 )) ] || kill 1"]
+      interval: 5m
+      timeout: 10s
+      start_period: 10m
 
 volumes:
   thunderstorm:
