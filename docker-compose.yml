@@ -46,7 +46,7 @@ services:
       - thunderstorm:/opt/nextron/thunderstorm
       # Optional: mount TLS certificate and private key (uncomment TLS_CERT/TLS_KEY above as well)
       # - ./tls_cert:/run/secrets/tls_cert:ro
-      # - ./tls_key:/run/secrets/tls_key:ro#
+      # - ./tls_key:/run/secrets/tls_key:ro
     restart: unless-stopped
     # THOR 10: periodically restart the container by signaling PID 1 once uptime exceeds
     # SIGNATURE_UPDATE_INTERVAL hours; restart policy brings it back up. Skipped when
