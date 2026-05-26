@@ -12,7 +12,8 @@ if [ ! -f "$TARGET_DIR/thor-util" ]; then
         rm "$TEMP_DIR/thor.zip"
 fi
 
-# detect THOR channel: techpreview/dev builds carry a "-dev" pre-release suffix in the manifest
+# detect THOR channel using the "-dev" pre-release suffix in the manifest
+# TODO: has to be adjusted once THOR 11 is in techpreview but does not carry the -dev suffix anymore
 THOR_CHANNEL=stable
 grep -qE '^version:.*-dev' "$TARGET_DIR/docs/manifest.yml" 2>/dev/null && THOR_CHANNEL=techpreview
 echo "Detected THOR channel: $THOR_CHANNEL"
