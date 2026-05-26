@@ -51,16 +51,16 @@ fi
 
 # append optional TLS arguments to THUNDERSTORM_ARGS
 if [ "$THOR_VERSION" = "11" ]; then
-    [ -n "$TLS_CERT" ] && THUNDERSTORM_ARGS="$THUNDERSTORM_ARGS --cert $TLS_CERT"
-    [ -n "$TLS_KEY" ]  && THUNDERSTORM_ARGS="$THUNDERSTORM_ARGS --key $TLS_KEY"
+    [ -n "$TLS_CERT" ] && THUNDERSTORM_ARGS="$THUNDERSTORM_ARGS --cert $TLS_CERT" || :
+    [ -n "$TLS_KEY" ]  && THUNDERSTORM_ARGS="$THUNDERSTORM_ARGS --key $TLS_KEY"   || :
 else
-    [ -n "$TLS_CERT" ] && THUNDERSTORM_ARGS="$THUNDERSTORM_ARGS --server-cert $TLS_CERT"
-    [ -n "$TLS_KEY" ]  && THUNDERSTORM_ARGS="$THUNDERSTORM_ARGS --server-key $TLS_KEY"
+    [ -n "$TLS_CERT" ] && THUNDERSTORM_ARGS="$THUNDERSTORM_ARGS --server-cert $TLS_CERT" || :
+    [ -n "$TLS_KEY" ]  && THUNDERSTORM_ARGS="$THUNDERSTORM_ARGS --server-key $TLS_KEY"   || :
 fi
 
 # --pure-yara and --force-max-file-size are THOR flags, append to THOR_ARGS
-[ -n "$PURE_YARA" ] && THOR_ARGS="--pure-yara $THOR_ARGS"
-[ -n "$FORCE_MAX_FILE_SIZE" ] && THOR_ARGS="--force-max-file-size $THOR_ARGS"
+[ -n "$PURE_YARA" ] && THOR_ARGS="--pure-yara $THOR_ARGS" || :
+[ -n "$FORCE_MAX_FILE_SIZE" ] && THOR_ARGS="--force-max-file-size $THOR_ARGS" || :
 
 # optionally write log to volume; HTML and CSV are always disabled
 if [ "$THOR_VERSION" = "11" ]; then
