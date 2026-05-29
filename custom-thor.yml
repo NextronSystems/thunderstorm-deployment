@@ -1,5 +1,0 @@
-# This is your custom config for THOR
-# Send scan output to a remote server
-#remote-log:
-#  - splunk.intern:514:DEFAULT:TCP
-#  - elastic.intern:1514:JSON:TCP

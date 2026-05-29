@@ -1,71 +1,66 @@
-# Deploy Thunderstorm in a Container Environment
+# Deploy Thunderstorm as a Container
 
-Many companies rely on the containerization of services to increase economic and technical efficiency. Customers which use containerization need to create images that make the services available as containers. In this guide, we provide you with the necessary requirements and templates to run Thunderstorm as a container.
+[THOR Thunderstorm](https://www.nextron-systems.com/thor-thunderstorm/) is a web service that lets you scan files with our compromise assessment tool THOR through a Web-API. This guide provides a base [container image](https://github.com/NextronSystems/thunderstorm-deployment/pkgs/container/thunderstorm-deployment) and a [Docker Compose template](https://raw.githubusercontent.com/NextronSystems/thunderstorm-deployment/master/docker-compose.yml) so you can run Thunderstorm as a container with just providing your contract token.
 
-## Containerize Thunderstorm
 
-Thunderstorm is a web service which allows you to scan files with our compromise assessment tool THOR through a Web-API. By sane defaults, the web service listens to `127.0.0.1` on port `8000` only. However, if we want the Thunderstorm API to be accessible from anywhere, we need to adjust the binding address via command line parameter `--host`.
+## Quick-Start
 
-We created an `entrypoint.sh` which accepts optional environment variables from a Containerfile and deployment configuration. First, the shell script updates the THOR signatures to download all detection rules published after the image was created. Subsequently, the Thunderstorm executable is started which will run infinitely until the container is stopped.
-
-### Build Container Image
-
-The Thunderstorm binary is not publicly available and requires a non-host-based license from our portal. Therefore, we cannot provide a ready-to-use image. However, you can use the following Containerfile in combination with your contract token to build your personal Thunderstorm image.
-
-1. Clone the repository
+1. Download the [Docker Compose](https://raw.githubusercontent.com/NextronSystems/thunderstorm-deployment/master/docker-compose.yml) file
 
 ```
-git clone https://github.com/NextronSystems/thunderstorm-deployment.git
+curl -O https://raw.githubusercontent.com/NextronSystems/thunderstorm-deployment/master/docker-compose.yml
 ```
 
-2. Change to repository directory
+2. Get a contract token from the [Nextron Portal](https://portal.nextron-systems.com/ui/contracts/contracts) (see [Contract-Token](#contract-token))
+
+3. Start the service with your contract token
 
 ```
-cd thunderstorm-deployment/
+CONTRACT_TOKEN=<CONTRACT_TOKEN> docker compose up -d
 ```
 
-3. Build image where `<TAG>` could be the Thunderstorm version and `<CONTRACT_TOKEN>` is the contract token of your non-host-based Thunderstorm license.
+Thunderstorm is exposed on port **8080** by default.
 
-```
-docker build -f Containerfile -t thunderstorm:<TAG> --build-arg CONTRACT_TOKEN=<CONTRACT_TOKEN> .
-```
+## Contract-Token
 
-4. Push image to your container registry
+Deploying Thunderstorm as a container requires a **non-host-based** Thunderstorm license.
 
-```
-docker tag thunderstorm:<TAG> registry.internal/thunderstorm/thunderstorm:<TAG>
-docker push registry.internal/thunderstorm/thunderstorm:<TAG>
-```
+On first start, the container uses your contract token to download the THOR binaries and persists them in a Docker volume so subsequent restarts are instant. You can omit the contract token afterwards as long as the volume exists.
+
+A contract token can be retrieved from the [Nextron Portal](https://portal.nextron-systems.com/ui/contracts/contracts) under *Contracts & Licenses → Contracts → Actions → cloud icon → THOR Download Token*.
+
+<img src="images/contract_token.png" alt="Contract Token location in Nextron Portal" width="500">
+
+## Tech-Preview
+
+If you want to use the techpreview channel (currently THOR 11) you need to set `TECHPREVIEW=1`. If it is omitted it will downgrade to the stable channel again.
+
+The compose file contains commented environment variables for all available configuration options. Some options only apply to specific THOR major versions, for example, `QUEUE_WARN_SIZE` is only available for THOR 11.
 
 ## Signature Updates
 
-By default, Thunderstorm tries to download new THOR signatures every 24 hours while running. You should keep in mind that the THOR signature release cycle may differ, so there is not always a new package available. The signature update interval can be modified on an hourly basis by specifying the environment variable `SIGNATURE_UPDATE_INTERVAL` in the `Containerfile` or `docker-compose.yml`.
+THOR signatures are updated automatically on every container start. To keep them fresh without manually restart, set `SIGNATURE_UPDATE_INTERVAL` (in hours) to schedule recurring updates.
 
-### Rolling Deployment
+The update mechanism depends on the THOR major version. On THOR 10, new signatures only take effect after a restart. Docker's health check therefore marks the container as unhealthy once `SIGNATURE_UPDATE_INTERVAL` has elapsed, prompting Docker to restart it. The new signatures are then fetched as part of the regular container start, at the cost of a brief API downtime. THOR 11 uses Thunderstorm's built-in signature-update feature to download and apply signatures in-place, leaving the API available throughout.
 
-If you are running a single Thunderstorm instance, you may want to use a Rolling Deployment to prevent a downtime of your Thunderstorm service. A Rolling Deployment spawns a new container and stops the old one after ensuring that the new one is healthy and ready to accept requests. The configuration differs between container management systems such as Kubernetes, Docker or Docker Swarm.
+## Additional Arguments
 
-For Docker we recommend `start-first` as value for `deploy.update_config.order`. A docker-compose template can be found under `ochestration/docker/docker-compose.yml`.
-
-### Multiple Replicas
-
-If you want to deploy multiple Thunderstorm instances, we recommend to distribute the requests equally using a load-balancer such as [Traefik](https://traefik.io/traefik) or [Nginx](https://nginx.org).
-
-We created a docker-compose template for a Docker Swarm setup with Traefik under `ochestration/docker-swarm/docker-compose.yml`.
-
-## Remote Logging
-
-Thunderstorm is able to pass custom parameters to the THOR executable. By default, the respective Container Image disables the generation of JSON reports with `--no-json` because the reports will be deleted after the container stops (unless a persistence volume is used). However, you usually want to log the scan results to a remote SIEM system such as [Splunk](https://www.splunk.com) or [Elastic](https://www.elastic.co). Therefore, you may want to specify your remote logging systems inside the `custom-thor.yml` template file.
+If you need to customize the THOR scan behavior, you can pass additional arguments via `THOR_ARGS` environment variable. For example, to forward scan results to a remote SIEM:
 
 ```yaml
-# Send scan output to a remote server
-remote-log:
-  - splunk.intern:514:DEFAULT:TCP
-  - elastic.intern:1514:JSON:TCP
+environment:
+  THOR_ARGS: "--remote-log splunk.intern:514:DEFAULT:TCP --remote-log elastic.intern:1514:JSON:TCP"
 ```
+
+A full list of all supported arguments can be derived from the THOR binary using `./thor-linux-64 --fullhelp`.
 
 ## Security
 
 The communication between a client and the Thunderstorm service could involve sensitive files. Therefore, we highly recommend to encrypt the traffic using TLS by mounting the certificate and private key via the built-in secrets functionality of Docker or Kubernetes into the container. In addition, you need to specify the file path to the TLS certificate and private key in the environment variables `TLS_CERT` and `TLS_KEY`.
 
 Out of the box, Thunderstorm API is unauthenticated and does not support authentication providers at the moment. If you require an authentication layer, we suggest to use a proxy middleware which delegates the authentication to an external provider such as [Microsoft Entra ID](https://www.microsoft.com/de-de/security/business/identity-access/microsoft-entra-id).
+
+## Limitations
+
+### Load-Balancing
+Thunderstorm allows you to send **asynchronous requests** and poll the results using an ID. Currently, Thunderstorm instances do not share their results with each other. If you run multiple Thunderstorm containers behind a load-balancer and request the results of an async request, you may not get the result from the correct Thunderstorm instance. We recommend to use async requests in combination with remote logging only in a load-balancer setup.
