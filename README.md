@@ -23,7 +23,7 @@ Thunderstorm is exposed on port **8080** by default.
 
 ## Contract-Token
 
-Deploying Thunderstorm as a container requires a **non-host-based** Thunderstorm license.
+Deploying Thunderstorm as a container requires a **non-host-based** Thunderstorm contract with at least one issued license.
 
 On first start, the container uses your contract token to download the THOR binaries and persists them in a Docker volume so subsequent restarts are instant. You can omit the contract token afterwards as long as the volume exists.
 
