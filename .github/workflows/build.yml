@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - master
+    paths:
+      - Containerfile
+      - entrypoint.sh
+      - .github/workflows/build.yml
   workflow_dispatch:
 
 env:
