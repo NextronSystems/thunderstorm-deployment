@@ -35,7 +35,7 @@ services:
       # SYNC_ONLY_THREADS: ""
       #
       # --- THOR 11 only ---
-      # Optional: minimum score for storing samples (default: 200)
+      # Optional: minimum score for storing samples (default: 200, which disables storage since the max score is 100)
       # STORE_SAMPLES_SCORE: "200"
       # Optional: upload queue size warning threshold (default: 50000)
       # QUEUE_WARN_SIZE: "50000"
