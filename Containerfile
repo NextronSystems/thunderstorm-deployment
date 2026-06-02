@@ -9,8 +9,10 @@ ENV TEMP_DIR="/tmp/thunderstorm"
 ENV TARGET_DIR="/opt/nextron/thunderstorm"
 ENV UPLOAD_DIR="$TEMP_DIR/uploads"
 
-# create directories and user
-RUN mkdir -p \
+# create user, group and directories
+RUN addgroup -g 1000 -S thunderstorm && \
+    adduser -S -H -D -u 1000 -G thunderstorm -g "Thunderstorm User" thunderstorm && \
+    mkdir -p \
         "$TEMP_DIR" \
         "$TEMP_DIR/.persisted-uploads" \
         "$TEMP_DIR/logs" \
@@ -21,8 +23,7 @@ RUN mkdir -p \
         "$TARGET_DIR/signatures" \
         "$TARGET_DIR/custom-signatures" \
         "$UPLOAD_DIR" && \
-    adduser -S -H -D -g "Thunderstorm User" thunderstorm && \
-    chown -R thunderstorm "$TEMP_DIR" "$TARGET_DIR"
+    chown -R thunderstorm:thunderstorm "$TEMP_DIR" "$TARGET_DIR"
 
 # copy unified entrypoint script
 COPY entrypoint.sh /entrypoint.sh
