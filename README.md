@@ -1,9 +1,9 @@
 # Deploy Thunderstorm as a Container
 
-[THOR Thunderstorm](https://www.nextron-systems.com/thor-thunderstorm/) is a web service that lets you scan files with our compromise assessment tool THOR through a Web-API. This guide provides a base [container image](https://github.com/NextronSystems/thunderstorm-deployment/pkgs/container/thunderstorm-deployment) and a [Docker Compose template](https://raw.githubusercontent.com/NextronSystems/thunderstorm-deployment/master/docker-compose.yml) so you can run Thunderstorm as a container with just providing your contract token.
+[THOR Thunderstorm](https://www.nextron-systems.com/thor-thunderstorm/) is a web service that lets you scan files with our compromise assessment tool THOR through a Web-API. This guide provides a base [container image](https://github.com/NextronSystems/thunderstorm-deployment/pkgs/container/thunderstorm-deployment), a [Docker Compose template](https://raw.githubusercontent.com/NextronSystems/thunderstorm-deployment/master/docker-compose.yml), and a [Helm chart](charts/thunderstorm) so you can run Thunderstorm as a container with just providing your contract token.
 
 
-## Quick-Start
+## Quick-Start (Docker Compose)
 
 1. Download the [Docker Compose](https://raw.githubusercontent.com/NextronSystems/thunderstorm-deployment/master/docker-compose.yml) file
 
@@ -20,6 +20,63 @@ CONTRACT_TOKEN=<CONTRACT_TOKEN> docker compose up -d
 ```
 
 Thunderstorm is exposed on port **8080** by default.
+
+## Quick-Start (Kubernetes / Helm)
+
+A Helm chart is provided in [charts/thunderstorm](charts/thunderstorm). Requires `kubectl` connected to a cluster and `helm` 3.x.
+
+1. Get a contract token (see [Contract-Token](#contract-token))
+
+2. Install the chart
+
+```
+helm install thunderstorm ./charts/thunderstorm \
+  --namespace thunderstorm --create-namespace \
+  --set contractToken.value=<CONTRACT_TOKEN>
+```
+
+To avoid putting the token on the command line, create the Secret yourself and reference it via `--set contractToken.existingSecret=<secret-name>`.
+
+3. Reach the API (default service type is ClusterIP)
+
+```
+kubectl -n thunderstorm port-forward svc/thunderstorm 8080:8080
+curl http://localhost:8080/api/status
+```
+
+### Common overrides
+
+All settings live in [charts/thunderstorm/values.yaml](charts/thunderstorm/values.yaml). Frequently-tuned knobs:
+
+- `env.TECHPREVIEW=true` — opt into the THOR 11 techpreview channel
+- `env.SIGNATURE_UPDATE_INTERVAL=24` — recurring signature refresh (hours)
+- `persistence.size`, `persistence.storageClass` — PVC for THOR binaries and signatures
+- `resources.requests` / `resources.limits` — set generous memory limits; THOR can be memory-hungry
+- `service.type=LoadBalancer` or `ingress.enabled=true` — expose externally
+
+### Expose via Cilium Gateway
+
+If your cluster uses Cilium as the Gateway API implementation and you already have a shared `Gateway` resource, attach an `HTTPRoute` by enabling the chart's `gateway` block. The chart only creates the `HTTPRoute`; the `Gateway` is expected to already exist.
+
+```
+helm upgrade thunderstorm ./charts/thunderstorm -n thunderstorm --reuse-values \
+  --set gateway.enabled=true \
+  --set gateway.parentRef.name=cilium-gateway \
+  --set gateway.parentRef.namespace=tooling \
+  --set gateway.parentRef.sectionName=https-standard \
+  --set gateway.hostnames[0]=thunderstorm.example.com
+```
+
+### Upgrade and uninstall
+
+```
+helm upgrade thunderstorm ./charts/thunderstorm -n thunderstorm -f my-values.yaml
+helm uninstall thunderstorm -n thunderstorm
+# The THOR binaries PVC is retained by default; delete it manually to wipe state:
+# kubectl -n thunderstorm delete pvc -l app.kubernetes.io/name=thunderstorm
+```
+
+When upgrading after the chart introduces new value defaults, prefer `--reset-then-reuse-values` (Helm 3.14+) over `--reuse-values` — the latter silently drops any new defaults shipped by the chart.
 
 ## Contract-Token
 

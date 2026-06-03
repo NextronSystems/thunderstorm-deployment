@@ -1,0 +1,17 @@
+apiVersion: v1
+name: thunderstorm
+description: THOR Thunderstorm - Nextron's web service for scanning files via the compromise-assessment API
+version: 0.1.0
+appVersion: "latest"
+home: https://github.com/NextronSystems/thunderstorm-deployment
+sources:
+  - https://github.com/NextronSystems/thunderstorm-deployment
+maintainers:
+  - name: Marius Benthin
+    email: marius.benthin@nextron-systems.com
+keywords:
+  - thor
+  - thunderstorm
+  - nextron
+  - security
+  - scanner
