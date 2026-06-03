@@ -1,0 +1,133 @@
+image:
+  repository: ghcr.io/nextronsystems/thunderstorm-deployment
+  # tag defaults to .Chart.AppVersion when empty
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Required on initial startup: non-host-based Thunderstorm contract token.
+# Provide the value here (rendered into a Secret) or point at an existing Secret.
+contractToken:
+  value: ""
+  existingSecret: ""
+  existingSecretKey: CONTRACT_TOKEN
+
+# Optional environment variables - empty values are omitted
+env:
+  TECHPREVIEW: true
+  SIGNATURE_UPDATE_INTERVAL: ""
+  RESULT_CACHE_SIZE: ""
+  FORCE_MAX_FILE_SIZE: ""
+  LOG_ENABLED: ""
+  PURE_YARA: ""
+  YARA_FORGE: ""
+  THUNDERSTORM_ARGS: ""
+  THOR_ARGS: ""
+  # THOR 10 only
+  STORE_SAMPLES: ""
+  SYNC_ONLY_THREADS: ""
+  # THOR 11 only
+  STORE_SAMPLES_SCORE: ""
+  QUEUE_WARN_SIZE: ""
+  VFS_ENABLED: ""
+
+# TLS certificate and private key. When enabled, a Secret of type kubernetes.io/tls
+# is mounted at /run/secrets/tls and TLS_CERT/TLS_KEY env vars are set automatically.
+tls:
+  enabled: false
+  # PEM-encoded material. Ignored when existingSecret is set.
+  cert: ""
+  key: ""
+  existingSecret: ""
+
+persistence:
+  enabled: true
+  size: 5Gi
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  existingClaim: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: thunderstorm.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Gateway API HTTPRoute that attaches to an existing Gateway (typically a shared
+# Cilium gateway in another namespace). The chart does NOT create a Gateway
+# resource; provide parentRef pointing at one that already exists.
+# Assume https when the referenced listener terminates TLS (used only for NOTES output).
+gateway:
+  enabled: false
+  parentRef:
+    name: cilium-gateway          # name of the existing Gateway
+    namespace: tooling            # namespace where the Gateway lives (omit if same as release namespace)
+    sectionName: https-standard   # listener name on the Gateway (omit to attach to all listeners)
+  hostnames:
+    - thunderstorm.local
+  annotations: {}
+
+resources: {}
+  # limits:
+  #   cpu: "4"
+  #   memory: 8Gi
+  # requests:
+  #   cpu: "1"
+  #   memory: 2Gi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+podAnnotations: {}
+podLabels: {}
+
+# The container image runs as the non-root `thunderstorm` user (UID/GID 1000)
+# created in the Containerfile. fsGroup tells kubelet to chown the mounted PVC
+# to this GID before the container starts, so unzip can write into /opt/nextron/thunderstorm.
+podSecurityContext:
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+# livenessProbe: it fails once the container has been running longer than 
+# SIGNATURE_UPDATE_INTERVAL hours, prompting kubelet to restart the pod 
+# so THOR 10 re-fetches signatures on next boot. Always passes when TECHPREVIEW
+# is set (THOR 11 updates in-process) or the interval is 0/unset.
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 600
+  periodSeconds: 300
+  timeoutSeconds: 10
+  failureThreshold: 1
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
