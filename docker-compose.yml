@@ -44,6 +44,10 @@ services:
     volumes:
       # Persist Thor binaries and other artifacts across restarts
       - thunderstorm:/opt/nextron/thunderstorm
+      # Optional: persist logs written when LOG_ENABLED=true
+      # - thunderstorm-logs:/tmp/thunderstorm/logs
+      # Optional: persist VFS mirror data written when VFS_ENABLED=true
+      # - thunderstorm-vfs:/tmp/thunderstorm/vfs
       # Optional: mount TLS certificate and private key (uncomment TLS_CERT/TLS_KEY above as well)
       # - ./tls_cert:/run/secrets/tls_cert:ro
       # - ./tls_key:/run/secrets/tls_key:ro
@@ -60,3 +64,5 @@ services:
 
 volumes:
   thunderstorm:
+  thunderstorm-logs:
+  thunderstorm-vfs:

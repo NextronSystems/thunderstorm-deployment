@@ -4,7 +4,7 @@
 if [ ! -f "$TARGET_DIR/thor-util" ]; then
     if [ -z "$CONTRACT_TOKEN" ]; then
         echo "CONTRACT_TOKEN is required to download THOR!" >&2
-        exit 0
+        exit 1
     fi
     echo "Downloading THOR..." && \
     wget -O "$TEMP_DIR/thor.zip" "https://portal.nextron-systems.com/api/voucher/download/$CONTRACT_TOKEN/thor/linux" && \
@@ -16,7 +16,7 @@ fi
 if [ ! -f "$TARGET_DIR/thor-linux-64" ]; then
     echo "THOR binary not found at $TARGET_DIR/thor-linux-64. Abort!"
     echo "Please verify that your CONTRACT_TOKEN is set and valid."
-    exit 0
+    exit 1
 fi
 
 # detect THOR channel using the "-dev" pre-release suffix in the manifest
@@ -37,7 +37,7 @@ fi
 THOR_VERSION=$("$TARGET_DIR/thor-linux-64" --version 2>&1 | awk '/^THOR / { split($2, v, "."); print v[1]; exit }')
 if [ -z "$THOR_VERSION" ]; then
     echo "Failed to detect THOR major version from $TARGET_DIR/thor-linux-64 --version" >&2
-    exit 0
+    exit 1
 fi
 echo "Detected THOR major version: $THOR_VERSION"
 
