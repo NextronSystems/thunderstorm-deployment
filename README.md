@@ -34,9 +34,20 @@ Verify the container reached the API:
 
 ```bash
 docker compose ps
-docker compose logs thunderstorm
+docker compose logs --tail 80 thunderstorm
 curl http://localhost:8080/api/status
 ```
+
+During the first start, THOR downloads, extracts, updates signatures, and compiles rules. The container is ready once the logs show `Web service started at http://0.0.0.0:8080/` and `/api/status` returns JSON.
+
+Verify a synchronous scan with a harmless file:
+
+```bash
+printf 'hello thunderstorm\n' > sample.txt
+curl -F 'file=@sample.txt' http://localhost:8080/api/check
+```
+
+A clean benign response is an empty JSON array (`[]`).
 
 If you migrate an existing collector that points to another port, update the collectors or override the host port, for example `PORT=8081 docker compose up -d`.
 
@@ -49,6 +60,8 @@ The issued license requirement is separate from quota. A contract can exist, hav
 If the first start fails with `HTTP 409 Conflict` or `no valid licenses for voucher`, check whether the license has already been generated for the contract. That error can occur even when the contract token itself is correct.
 
 On first start, the container uses your contract token to download the THOR binaries and persists them in a Docker volume so subsequent restarts are instant. You can omit the contract token afterwards as long as the volume exists, but keeping it in `.env` makes it available for rebuilds or volume recreation.
+
+If the volume already contains THOR and you intentionally omit `.env`, Docker Compose starts the service without a token. If the volume is empty, the entrypoint stops with `CONTRACT_TOKEN is required to download THOR!`.
 
 A contract token can be retrieved from the [Nextron Portal](https://portal.nextron-systems.com/ui/contracts/contracts) under *Contracts & Licenses → Contracts → Actions → cloud icon → THOR Download Token*.
 
@@ -96,6 +109,25 @@ Remove all persistent container state, including downloaded THOR binaries and si
 
 ```bash
 docker compose down -v
+```
+
+## Troubleshooting
+
+### Container Keeps Restarting During First Start
+
+The Compose template uses `restart: on-failure` so Thunderstorm restarts after runtime crashes. During first bootstrap this also means configuration errors, such as a missing token or a token without an issued license, can cause repeated restart attempts.
+
+Check the most recent logs:
+
+```bash
+docker compose logs --tail 80 thunderstorm
+```
+
+Then stop the container, fix the token or issued-license state, and start it again:
+
+```bash
+docker compose down
+docker compose up -d
 ```
 
 ## Security

@@ -5,7 +5,7 @@ services:
       - "${PORT:-8080}:8080"
     environment:
       # Required on initial startup: your non-host-based Thunderstorm contract token
-      CONTRACT_TOKEN: "${CONTRACT_TOKEN}"
+      CONTRACT_TOKEN: "${CONTRACT_TOKEN:-}"
       # Optional: upgrade to THOR techpreview channel
       # TECHPREVIEW: "true"
       # Optional: hours between signature updates (default: 0)
