@@ -6,16 +6,21 @@ if [ ! -f "$TARGET_DIR/thor-util" ]; then
         echo "CONTRACT_TOKEN is required to download THOR!" >&2
         exit 1
     fi
-    echo "Downloading THOR..." && \
-    wget -O "$TEMP_DIR/thor.zip" "https://portal.nextron-systems.com/api/voucher/download/$CONTRACT_TOKEN/thor/linux" && \
-        unzip -o -q "$TEMP_DIR/thor.zip" -d "$TARGET_DIR" && \
+    echo "Downloading THOR..."
+    if ! wget -O "$TEMP_DIR/thor.zip" "https://portal.nextron-systems.com/api/voucher/download/$CONTRACT_TOKEN/thor/linux"; then
+        echo "Failed to download THOR from the Nextron Portal." >&2
+        echo "Verify that CONTRACT_TOKEN is correct, the contract is non-host-based, and a Thunderstorm license has already been generated for the contract." >&2
+        echo "HTTP 409 with 'no valid licenses for voucher' usually means the contract exists but has no issued downloadable license yet." >&2
+        exit 1
+    fi
+    unzip -o -q "$TEMP_DIR/thor.zip" -d "$TARGET_DIR" && \
         rm "$TEMP_DIR/thor.zip"
 fi
 
 # abort if THOR binary is not available
 if [ ! -f "$TARGET_DIR/thor-linux-64" ]; then
     echo "THOR binary not found at $TARGET_DIR/thor-linux-64. Abort!"
-    echo "Please verify that your CONTRACT_TOKEN is set and valid."
+    echo "Please verify that your CONTRACT_TOKEN is set and valid, and that the contract has an issued Thunderstorm license."
     exit 1
 fi
 

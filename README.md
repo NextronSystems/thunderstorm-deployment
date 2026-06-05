@@ -5,7 +5,7 @@
 
 ## Quick-Start
 
-Prerequisites: Docker Engine with the Docker Compose plugin, outbound HTTPS access to the Nextron Portal, and a non-host-based Thunderstorm contract token.
+Prerequisites: Docker Engine with the Docker Compose plugin, outbound HTTPS access to the Nextron Portal, and a non-host-based Thunderstorm contract token with an already issued license.
 
 1. Download the [Docker Compose](https://raw.githubusercontent.com/NextronSystems/thunderstorm-deployment/master/docker-compose.yml) file
 
@@ -13,7 +13,7 @@ Prerequisites: Docker Engine with the Docker Compose plugin, outbound HTTPS acce
 curl -O https://raw.githubusercontent.com/NextronSystems/thunderstorm-deployment/master/docker-compose.yml
 ```
 
-2. Get a contract token from the [Nextron Portal](https://portal.nextron-systems.com/ui/contracts/contracts) (see [Contract-Token](#contract-token))
+2. Generate or verify an issued Thunderstorm license for the contract, then get a contract token from the [Nextron Portal](https://portal.nextron-systems.com/ui/contracts/contracts) (see [Contract-Token](#contract-token))
 
 3. Store the token in an `.env` file next to `docker-compose.yml`
 
@@ -43,6 +43,10 @@ If you migrate an existing collector that points to another port, update the col
 ## Contract-Token
 
 Deploying Thunderstorm as a container requires a **non-host-based** Thunderstorm contract with at least one issued license.
+
+The issued license requirement is separate from quota. A contract can exist, have a token, and still show available quota such as `0/1`, but the container cannot download THOR until a Thunderstorm license has actually been generated or issued for that contract in the Portal. The container does not issue a license from quota during startup.
+
+If the first start fails with `HTTP 409 Conflict` or `no valid licenses for voucher`, check whether the license has already been generated for the contract. That error can occur even when the contract token itself is correct.
 
 On first start, the container uses your contract token to download the THOR binaries and persists them in a Docker volume so subsequent restarts are instant. You can omit the contract token afterwards as long as the volume exists, but keeping it in `.env` makes it available for rebuilds or volume recreation.
 
