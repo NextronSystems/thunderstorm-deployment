@@ -13,14 +13,18 @@ if [ ! -f "$TARGET_DIR/thor-util" ]; then
         echo "HTTP 409 with 'no valid licenses for voucher' usually means the contract exists but has no issued downloadable license yet." >&2
         exit 1
     fi
-    unzip -o -q "$TEMP_DIR/thor.zip" -d "$TARGET_DIR" && \
-        rm "$TEMP_DIR/thor.zip"
+    if ! unzip -o -q "$TEMP_DIR/thor.zip" -d "$TARGET_DIR"; then
+        echo "Failed to unzip THOR archive; the download may be corrupt or incomplete." >&2
+        rm -f "$TEMP_DIR/thor.zip"
+        exit 1
+    fi
+    rm -f "$TEMP_DIR/thor.zip"
 fi
 
 # abort if THOR binary is not available
 if [ ! -f "$TARGET_DIR/thor-linux-64" ]; then
-    echo "THOR binary not found at $TARGET_DIR/thor-linux-64. Abort!"
-    echo "Please verify that your CONTRACT_TOKEN is set and valid, and that the contract has an issued Thunderstorm license."
+    echo "THOR binary not found at $TARGET_DIR/thor-linux-64. Abort!" >&2
+    echo "Please verify that your CONTRACT_TOKEN is set and valid, and that the contract has an issued Thunderstorm license." >&2
     exit 1
 fi
 

@@ -75,9 +75,10 @@ The compose file contains commented environment variables for all available conf
 
 ## Signature Updates
 
-THOR signatures are updated automatically on every container start. To keep them fresh without manual restarts, set `SIGNATURE_UPDATE_INTERVAL` (in hours) to schedule recurring updates.
+THOR signatures are updated automatically on every container start. `SIGNATURE_UPDATE_INTERVAL` (in hours) controls recurring updates afterwards, and its default behavior differs by THOR major version:
 
-The update mechanism depends on the THOR major version. On THOR 10, new signatures only take effect after a restart. Docker's health check therefore stops the container once `SIGNATURE_UPDATE_INTERVAL` has elapsed and the restart policy brings it back. The new signatures are then fetched as part of the regular container start, at the cost of a brief API downtime. THOR 11 uses Thunderstorm's built-in signature-update feature to download and apply signatures in-place, leaving the API available throughout.
+- **THOR 11** refreshes signatures **in-process every 24 hours by default**, even when `SIGNATURE_UPDATE_INTERVAL` is unset. Set it to another value to change the cadence, or to `0` to disable recurring updates. Updates are applied in-place, leaving the API available throughout.
+- **THOR 10** does **not** update periodically unless you set `SIGNATURE_UPDATE_INTERVAL` (unset is treated as `0`, i.e. disabled). New signatures only take effect after a restart, so when the interval elapses Docker's health check stops the container and the restart policy brings it back, fetching fresh signatures on startup at the cost of a brief API downtime.
 
 ## Additional Arguments
 
