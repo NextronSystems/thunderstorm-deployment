@@ -5,11 +5,12 @@ services:
       - "${PORT:-8080}:8080"
     environment:
       # Required on initial startup: your non-host-based Thunderstorm contract token
-      CONTRACT_TOKEN: "${CONTRACT_TOKEN}"
+      CONTRACT_TOKEN: "${CONTRACT_TOKEN:-}"
       # Optional: upgrade to THOR techpreview channel
       # TECHPREVIEW: "true"
-      # Optional: hours between signature updates (default: 0)
-      # SIGNATURE_UPDATE_INTERVAL: "0"
+      # Optional: hours between recurring signature updates
+      # (THOR 11 default: 24, in-process; set 0 to disable. THOR 10 default: 0, no periodic refresh)
+      # SIGNATURE_UPDATE_INTERVAL: "24"
       # Optional: result cache size (default: 250000)
       # RESULT_CACHE_SIZE: "250000"
       # Optional: enforce maximum file size for all file types including registry hives and log files
@@ -44,6 +45,10 @@ services:
     volumes:
       # Persist Thor binaries and other artifacts across restarts
       - thunderstorm:/opt/nextron/thunderstorm
+      # Optional: persist logs written when LOG_ENABLED=true
+      # - thunderstorm-logs:/tmp/thunderstorm/logs
+      # Optional: persist VFS mirror data written when VFS_ENABLED=true
+      # - thunderstorm-vfs:/tmp/thunderstorm/vfs
       # Optional: mount TLS certificate and private key (uncomment TLS_CERT/TLS_KEY above as well)
       # - ./tls_cert:/run/secrets/tls_cert:ro
       # - ./tls_key:/run/secrets/tls_key:ro
@@ -60,3 +65,5 @@ services:
 
 volumes:
   thunderstorm:
+  thunderstorm-logs:
+  thunderstorm-vfs:

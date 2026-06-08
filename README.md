@@ -1,31 +1,67 @@
 # Deploy Thunderstorm as a Container
 
-[THOR Thunderstorm](https://www.nextron-systems.com/thor-thunderstorm/) is a web service that lets you scan files with our compromise assessment tool THOR through a Web-API. This guide provides a base [container image](https://github.com/NextronSystems/thunderstorm-deployment/pkgs/container/thunderstorm-deployment) and a [Docker Compose template](https://raw.githubusercontent.com/NextronSystems/thunderstorm-deployment/master/docker-compose.yml) so you can run Thunderstorm as a container with just providing your contract token.
+[THOR Thunderstorm](https://www.nextron-systems.com/thor-thunderstorm/) is a web service that lets you scan files with our compromise assessment tool THOR through a Web-API. This guide provides a base [container image](https://github.com/NextronSystems/thunderstorm-deployment/pkgs/container/thunderstorm-deployment) and a [Docker Compose template](https://raw.githubusercontent.com/NextronSystems/thunderstorm-deployment/master/docker-compose.yml) so you can run Thunderstorm as a container by providing your contract token.
 
 
 ## Quick-Start
 
+Prerequisites: Docker Engine with the Docker Compose plugin, outbound HTTPS access to the Nextron Portal, and a non-host-based Thunderstorm contract token with an already issued license.
+
 1. Download the [Docker Compose](https://raw.githubusercontent.com/NextronSystems/thunderstorm-deployment/master/docker-compose.yml) file
 
-```
+```bash
 curl -O https://raw.githubusercontent.com/NextronSystems/thunderstorm-deployment/master/docker-compose.yml
 ```
 
-2. Get a contract token from the [Nextron Portal](https://portal.nextron-systems.com/ui/contracts/contracts) (see [Contract-Token](#contract-token))
+2. Generate or verify an issued Thunderstorm license for the contract, then get a contract token from the [Nextron Portal](https://portal.nextron-systems.com/ui/contracts/contracts) (see [Contract-Token](#contract-token))
 
-3. Start the service with your contract token
+3. Store the token in an `.env` file next to `docker-compose.yml`
 
+```bash
+printf 'CONTRACT_TOKEN=%s\n' '<CONTRACT_TOKEN>' > .env
+chmod 600 .env
 ```
-CONTRACT_TOKEN=<CONTRACT_TOKEN> docker compose up -d
+
+4. Start the service
+
+```bash
+docker compose up -d
 ```
 
 Thunderstorm is exposed on port **8080** by default.
+
+Verify the container reached the API:
+
+```bash
+docker compose ps
+docker compose logs --tail 80 thunderstorm
+curl http://localhost:8080/api/status
+```
+
+During the first start, THOR downloads, extracts, updates signatures, and compiles rules. The container is ready once the logs show `Web service started at http://0.0.0.0:8080/` and `/api/status` returns JSON.
+
+Verify a synchronous scan with a harmless file:
+
+```bash
+printf 'hello thunderstorm\n' > sample.txt
+curl -F 'file=@sample.txt' http://localhost:8080/api/check
+```
+
+A clean benign response is an empty JSON array (`[]`).
+
+If you migrate an existing collector that points to another port, update the collectors or override the host port, for example `PORT=8081 docker compose up -d`.
 
 ## Contract-Token
 
 Deploying Thunderstorm as a container requires a **non-host-based** Thunderstorm contract with at least one issued license.
 
-On first start, the container uses your contract token to download the THOR binaries and persists them in a Docker volume so subsequent restarts are instant. You can omit the contract token afterwards as long as the volume exists.
+The issued license requirement is separate from quota. A contract can exist, have a token, and still show available quota such as `0/1`, but the container cannot download THOR until a Thunderstorm license has actually been generated or issued for that contract in the Portal. The container does not issue a license from quota during startup.
+
+If the first start fails with `HTTP 409 Conflict` or `no valid licenses for voucher`, check whether the license has already been generated for the contract. That error can occur even when the contract token itself is correct.
+
+On first start, the container uses your contract token to download the THOR binaries and persists them in a Docker volume so subsequent restarts are instant. You can omit the contract token afterwards as long as the volume exists, but keeping it in `.env` makes it available for rebuilds or volume recreation.
+
+If the volume already contains THOR and you intentionally omit `.env`, Docker Compose starts the service without a token. If the volume is empty, the entrypoint stops with `CONTRACT_TOKEN is required to download THOR!`.
 
 A contract token can be retrieved from the [Nextron Portal](https://portal.nextron-systems.com/ui/contracts/contracts) under *Contracts & Licenses → Contracts → Actions → cloud icon → THOR Download Token*.
 
@@ -33,19 +69,20 @@ A contract token can be retrieved from the [Nextron Portal](https://portal.nextr
 
 ## Tech-Preview
 
-If you want to use the techpreview channel (currently THOR 11) you need to set `TECHPREVIEW=1`. If it is omitted it will downgrade to the stable channel again.
+If you want to use the techpreview channel (currently THOR 11), set `TECHPREVIEW=true`. If `TECHPREVIEW` is later omitted while the Docker volume still contains a techpreview installation, the entrypoint downgrades the installation back to the stable channel.
 
 The compose file contains commented environment variables for all available configuration options. Some options only apply to specific THOR major versions, for example, `QUEUE_WARN_SIZE` is only available for THOR 11.
 
 ## Signature Updates
 
-THOR signatures are updated automatically on every container start. To keep them fresh without manually restart, set `SIGNATURE_UPDATE_INTERVAL` (in hours) to schedule recurring updates.
+THOR signatures are updated automatically on every container start. `SIGNATURE_UPDATE_INTERVAL` (in hours) controls recurring updates afterwards, and its default behavior differs by THOR major version:
 
-The update mechanism depends on the THOR major version. On THOR 10, new signatures only take effect after a restart. Docker's health check therefore marks the container as unhealthy once `SIGNATURE_UPDATE_INTERVAL` has elapsed, prompting Docker to restart it. The new signatures are then fetched as part of the regular container start, at the cost of a brief API downtime. THOR 11 uses Thunderstorm's built-in signature-update feature to download and apply signatures in-place, leaving the API available throughout.
+- **THOR 11** refreshes signatures **in-process every 24 hours by default**, even when `SIGNATURE_UPDATE_INTERVAL` is unset. Set it to another value to change the cadence, or to `0` to disable recurring updates. Updates are applied in-place, leaving the API available throughout.
+- **THOR 10** does **not** update periodically unless you set `SIGNATURE_UPDATE_INTERVAL` (unset is treated as `0`, i.e. disabled). New signatures only take effect after a restart, so when the interval elapses Docker's health check stops the container and the restart policy brings it back, fetching fresh signatures on startup at the cost of a brief API downtime.
 
 ## Additional Arguments
 
-If you need to customize the THOR scan behavior, you can pass additional arguments via `THOR_ARGS` environment variable. For example, to forward scan results to a remote SIEM:
+If you need to customize Thunderstorm itself, use `THUNDERSTORM_ARGS`. If you need to customize THOR scan behavior, use `THOR_ARGS`. For example, to forward scan results to a remote SIEM:
 
 ```yaml
 environment:
@@ -54,9 +91,49 @@ environment:
 
 A full list of all supported arguments can be derived from the THOR binary using `./thor-linux-64 --fullhelp`.
 
+## Optional Persistent Data
+
+The Compose template always persists THOR binaries and signatures in the `thunderstorm` Docker volume. Optional runtime data is stored below `/tmp/thunderstorm` inside the container and is otherwise lost when the container is removed.
+
+- To keep logs, set `LOG_ENABLED=true` and uncomment the `thunderstorm-logs` volume mount.
+- To keep VFS mirror data, set `VFS_ENABLED=true` and uncomment the `thunderstorm-vfs` volume mount.
+
+## Cleanup
+
+Stop the service without deleting downloaded THOR binaries:
+
+```bash
+docker compose down
+```
+
+Remove all persistent container state, including downloaded THOR binaries and signatures:
+
+```bash
+docker compose down -v
+```
+
+## Troubleshooting
+
+### Container Keeps Restarting During First Start
+
+The Compose template uses `restart: on-failure` so Thunderstorm restarts after runtime crashes. During first bootstrap this also means configuration errors, such as a missing token or a token without an issued license, can cause repeated restart attempts.
+
+Check the most recent logs:
+
+```bash
+docker compose logs --tail 80 thunderstorm
+```
+
+Then stop the container, fix the token or issued-license state, and start it again:
+
+```bash
+docker compose down
+docker compose up -d
+```
+
 ## Security
 
-The communication between a client and the Thunderstorm service could involve sensitive files. Therefore, we highly recommend to encrypt the traffic using TLS by mounting the certificate and private key via the built-in secrets functionality of Docker or Kubernetes into the container. In addition, you need to specify the file path to the TLS certificate and private key in the environment variables `TLS_CERT` and `TLS_KEY`.
+The communication between a client and the Thunderstorm service could involve sensitive files. Therefore, we highly recommend encrypting the traffic using TLS. With Docker Compose, mount the certificate and private key read-only into the container and set `TLS_CERT` and `TLS_KEY` to the mounted paths. With Kubernetes, use Secret mounts for the same files.
 
 Out of the box, Thunderstorm API is unauthenticated and does not support authentication providers at the moment. If you require an authentication layer, we suggest to use a proxy middleware which delegates the authentication to an external provider such as [Microsoft Entra ID](https://www.microsoft.com/de-de/security/business/identity-access/microsoft-entra-id).
 
