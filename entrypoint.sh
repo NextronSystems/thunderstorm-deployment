@@ -7,14 +7,34 @@ if [ ! -f "$TARGET_DIR/thor-util" ]; then
         exit 0
     fi
     echo "Downloading THOR and issue license (if required) ..."
-    set -- \
-        --header="X-Token: $CONTRACT_TOKEN" \
-        --header="X-OS: linux" \
-        --header="X-Arch: amd64" \
-        --header="X-Type: server" \
-        --header="X-Hostname: ${LICENSE_HOSTNAME:-thunderstorm-container}"
-    [ -n "$LICENSE_COMMENT" ] && set -- "$@" --header="X-Comment: $LICENSE_COMMENT" || :
-    wget "$@" -O "$TEMP_DIR/thor.zip" "https://cloud.nextron-systems.com/api/public/thor10" && \
+    # The Nextron cloud issues a license server-side and binds it to the host
+    # identity sent in the X-Hostname header. Two optional environment variables
+    # tune this (see README / docker-compose.yml):
+    #   LICENSE_HOSTNAME - host identity for the issued license. Defaults to the
+    #                      fixed value "thunderstorm-container" so re-downloads
+    #                      reuse the same license slot instead of consuming new
+    #                      contract quota on every fresh volume.
+    #   LICENSE_COMMENT  - optional comment shown for the license in the portal.
+    #
+    # The optional X-Comment header is passed through a wrapper function so it
+    # lives in the function's own positional parameters. This avoids "set --",
+    # which would overwrite the entrypoint's "$@" (the excess arguments Docker
+    # forwards from "docker run").
+    download_thor() {
+        wget "$@" \
+            --header="X-Token: $CONTRACT_TOKEN" \
+            --header="X-OS: linux" \
+            --header="X-Arch: amd64" \
+            --header="X-Type: server" \
+            --header="X-Hostname: ${LICENSE_HOSTNAME:-thunderstorm-container}" \
+            -O "$TEMP_DIR/thor.zip" \
+            "https://cloud.nextron-systems.com/api/public/thor10"
+    }
+    if [ -n "$LICENSE_COMMENT" ]; then
+        download_thor --header="X-Comment: $LICENSE_COMMENT"
+    else
+        download_thor
+    fi && \
         unzip -o -q "$TEMP_DIR/thor.zip" -d "$TARGET_DIR" && \
         rm "$TEMP_DIR/thor.zip"
 fi
