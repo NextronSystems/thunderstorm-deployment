@@ -6,8 +6,15 @@ if [ ! -f "$TARGET_DIR/thor-util" ]; then
         echo "CONTRACT_TOKEN is required to download THOR!" >&2
         exit 0
     fi
-    echo "Downloading THOR..." && \
-    wget -O "$TEMP_DIR/thor.zip" "https://portal.nextron-systems.com/api/voucher/download/$CONTRACT_TOKEN/thor/linux" && \
+    echo "Downloading THOR and issue license (if required) ..."
+    set -- \
+        --header="X-Token: $CONTRACT_TOKEN" \
+        --header="X-OS: linux" \
+        --header="X-Arch: amd64" \
+        --header="X-Type: server" \
+        --header="X-Hostname: ${LICENSE_HOSTNAME:-thunderstorm-container}"
+    [ -n "$LICENSE_COMMENT" ] && set -- "$@" --header="X-Comment: $LICENSE_COMMENT" || :
+    wget "$@" -O "$TEMP_DIR/thor.zip" "https://cloud.nextron-systems.com/api/public/thor10" && \
         unzip -o -q "$TEMP_DIR/thor.zip" -d "$TARGET_DIR" && \
         rm "$TEMP_DIR/thor.zip"
 fi
