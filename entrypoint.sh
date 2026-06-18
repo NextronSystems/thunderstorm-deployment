@@ -16,10 +16,8 @@ if [ ! -f "$TARGET_DIR/thor-util" ]; then
     #                      contract quota on every fresh volume.
     #   LICENSE_COMMENT  - optional comment shown for the license in the portal.
     #
-    # The optional X-Comment header is passed through a wrapper function so it
-    # lives in the function's own positional parameters. This avoids "set --",
-    # which would overwrite the entrypoint's "$@" (the excess arguments Docker
-    # forwards from "docker run").
+    # ash has no arrays, so the optional X-Comment header is passed via a wrapper
+    # function instead of "set --" (which would clobber the entrypoint's "$@").
     download_thor() {
         wget "$@" \
             --header="X-Token: $CONTRACT_TOKEN" \
