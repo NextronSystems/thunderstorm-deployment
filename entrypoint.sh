@@ -9,7 +9,7 @@ if [ ! -f "$TARGET_DIR/thor-util" ]; then
     echo "Downloading THOR and issue license (if required) ..."
     # The Nextron cloud issues a license server-side and binds it to the host
     # identity sent in the X-Hostname header. Two optional environment variables
-    # tune this (see README / docker-compose.yml):
+    # tune this (see the Contract-Token section in the README):
     #   LICENSE_HOSTNAME - host identity for the issued license. Defaults to the
     #                      fixed value "thunderstorm-container" so re-downloads
     #                      reuse the same license slot instead of consuming new

@@ -6,11 +6,6 @@ services:
     environment:
       # Required on initial startup: your non-host-based Thunderstorm contract token
       CONTRACT_TOKEN: "${CONTRACT_TOKEN}"
-      # Optional: host identity the portal binds the issued license to on first download
-      # (default: "thunderstorm-container"; keep it fixed so re-downloads reuse the same license slot instead of consuming new contract quota)
-      # LICENSE_HOSTNAME: "thunderstorm-container"
-      # Optional: comment shown for the issued license in the Nextron Portal
-      # LICENSE_COMMENT: "thunderstorm deployment"
       # Optional: upgrade to THOR techpreview channel
       # TECHPREVIEW: "true"
       # Optional: hours between signature updates (default: 0)

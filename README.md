@@ -27,6 +27,11 @@ Deploying Thunderstorm as a container requires a **non-host-based** Thunderstorm
 
 On first start, the container uses your contract token to download the THOR binaries and persists them in a Docker volume so subsequent restarts are instant. You can omit the contract token afterwards as long as the volume exists.
 
+During that first download the Nextron Portal issues a license server-side. Two optional environment variables tune this:
+
+- `LICENSE_HOSTNAME` — host identity the portal binds the issued license to (default: `thunderstorm-container`). Keep it fixed so re-downloads reuse the same license slot instead of consuming new contract quota on every fresh volume.
+- `LICENSE_COMMENT` — comment shown for the issued license in the Nextron Portal.
+
 A contract token can be retrieved from the [Nextron Portal](https://portal.nextron-systems.com/ui/contracts/contracts) under *Contracts & Licenses → Contracts → Actions → cloud icon → THOR Download Token*.
 
 <img src="images/contract_token.png" alt="Contract Token location in Nextron Portal" width="500">
