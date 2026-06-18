@@ -6,8 +6,33 @@ if [ ! -f "$TARGET_DIR/thor-util" ]; then
         echo "CONTRACT_TOKEN is required to download THOR!" >&2
         exit 0
     fi
-    echo "Downloading THOR..." && \
-    wget -O "$TEMP_DIR/thor.zip" "https://portal.nextron-systems.com/api/voucher/download/$CONTRACT_TOKEN/thor/linux" && \
+    echo "Downloading THOR and issue license (if required) ..."
+    # The Nextron cloud issues a license server-side and binds it to the host
+    # identity sent in the X-Hostname header. Two optional environment variables
+    # tune this (see the Contract-Token section in the README):
+    #   LICENSE_HOSTNAME - host identity for the issued license. Defaults to the
+    #                      fixed value "thunderstorm-container" so re-downloads
+    #                      reuse the same license slot instead of consuming new
+    #                      contract quota on every fresh volume.
+    #   LICENSE_COMMENT  - optional comment shown for the license in the portal.
+    #
+    # ash has no arrays, so the optional X-Comment header is passed via a wrapper
+    # function instead of "set --" (which would clobber the entrypoint's "$@").
+    download_thor() {
+        wget "$@" \
+            --header="X-Token: $CONTRACT_TOKEN" \
+            --header="X-OS: linux" \
+            --header="X-Arch: amd64" \
+            --header="X-Type: server" \
+            --header="X-Hostname: ${LICENSE_HOSTNAME:-thunderstorm-container}" \
+            -O "$TEMP_DIR/thor.zip" \
+            "https://cloud.nextron-systems.com/api/public/thor10"
+    }
+    if [ -n "$LICENSE_COMMENT" ]; then
+        download_thor --header="X-Comment: $LICENSE_COMMENT"
+    else
+        download_thor
+    fi && \
         unzip -o -q "$TEMP_DIR/thor.zip" -d "$TARGET_DIR" && \
         rm "$TEMP_DIR/thor.zip"
 fi
